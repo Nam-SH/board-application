@@ -9,6 +9,7 @@
 
 <script>
   import SigninForm from '@/components/SigninForm'
+  import api from '@/api'
 
   export default {
     name: 'Signin',
@@ -19,8 +20,12 @@
       onSubmit (payload) {
         // console.log(payload)
         const { email, password } = payload
+        api.post('/auth/signin', { email, password })
+          .then(res => {
+            console.log(res.data)
+          })
       }
-    }
+    },
   }
 </script>
 

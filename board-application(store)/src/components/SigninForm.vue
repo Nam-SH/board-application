@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent="submit">
     <fieldset>
-      <input type="email" v-model="email" placeholder="이메일을 입력하시오">
+      <input type="text" v-model="email" placeholder="이메일을 입력하시오">
       <input type="password" v-model="password" placeholder="비밀번호를 입력하시오">
       
       <button type="submit">로그인!</button>
@@ -13,7 +13,7 @@
 <script>
   export default {
     name: 'SigninForm',
-    
+
     data () {
       return {
         email: '',
