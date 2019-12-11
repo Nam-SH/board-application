@@ -62,7 +62,7 @@ export default {
 - 게시글을 확인할 수 있는 ㅍ이지로서 게시글의 번호, 제목, 작성자, 작성일을 확인할 수 있다.
 - 아직 작성된 컴포넌트가 없기때문에 연결될 컴포넌트는 임의의 null값으로 부여한다.
 
-### 2.1  
+### 2.1  `router`의 `index.js` 작성
 
 ```js
 // board-application/src/router/index.js
@@ -87,7 +87,7 @@ export default new Router({
 })
 ```
 
-### 2.2  
+### 2.2  `components`내에 있는 `PostListPage` 의 `template`부분
 
 ```vue
 // board-application/src/components/PostListPage.vue
@@ -103,7 +103,7 @@ export default new Router({
 </template>
 ```
 
-### 2.3 
+### 2.3  `components`내에 있는 `PostListPage` 의 `script`부분
 
 ```vue
 // board-application/src/components/PostListPage.vue
@@ -113,34 +113,16 @@ export default new Router({
   // PostList 컴포넌트를 추가한다.
   import PostList from '@/components/PostList'
 
-  import api from '@/api'
-
   export default {
     name: 'PostListPage',
     components: {
       PostList
     },
-
-    // 컴포넌트 내에 데이터를 생성한다.
-    data () {
-      return {
-        posts: []
-      }
-    },
-    created () {
-      api.get('/posts')
-        .then(res => {
-          this.posts = res.data
-        })
-        .catch(err => {
-          console.log(err)
-        })
-    }
   }
 </script>
 ```
 
-### 2.4 
+### 2.4  `router`의 `index.js` 수정
 
 ```js
 // board-application/src/router/index.js
@@ -165,7 +147,127 @@ export default new Router({
 })
 ```
 
-### 2.5
+### 2.5 `components`내에 있는 `PostList` 의 `template`부분
+
+```vue
+// board-application/src/components/PostList.vue
+
+<template>
+  <div>
+    <table>
+      <colgroup>
+        <col style="width: 10%">
+        <col style="width: 60%">
+        <col style="width: 10%">
+        <col style="width: 20%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th scope="col">번호</th>
+          <th scope="col">제목</th>
+          <th scope="col">작성자</th>
+          <th scope="col">작성일</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="post in posts" :key="post.id">
+          <td scope="col">글 번호</td>
+          <td scope="col">
+          	 <router-link :to="{ name: 'PostListPage' }">글 제목</router-link> 
+		  	[댓글 수: 1</td>
+          <td scope="col">글 작성자</td>
+          <td scope="col">글 작성일</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</template>
+```
+
+### 
+
+
+
+## 3. Axios 
+
+### 3.1 Axios 설치
+
+```bash
+$ npm install axios --save
+```
+
+### 3.2 파일 생성 및 객체 생성
+
+- `src` 디렉터리 내에 `api` 디렉터리를 생성하고, `index.js`를 생성한다.
+- `index.js`에 `Axios`의 `create` 메소드를 사용하여 기본 옵션값을 가진 `Axios`객체를 생성한다.
+
+```js
+// board-application/src/api/index.js
+
+import axios from 'axios'
+
+export default axios.create({
+  baseURL: "//localhost:8000/api"
+})
+```
+
+### 3.3  `components`내에 있는 `PostListPage` 의 `template` 수정
+
+```vue
+// board-application/src/components/PostListPage.vue
+
+<template>
+  <div class="post-list-page">
+    <h1>포스트 게시글</h1>
+
+    <!-- PostListPage는 껍데기 역할만 하고, 실질적인 페이지의 내용을 보여주는 것은 PostList에 작성한다. -->
+    <!-- 자식 컴포넌트 props를 통해 posts 데이터를 내려준다. -->
+    <post-list :posts="posts" />
+  </div>
+</template>
+```
+
+### 3.4  `components`내에 있는 `PostListPage` 의 `script` 수정
+
+```vue
+// board-application/src/components/PostListPage.vue
+
+<script>
+
+  // PostList 컴포넌트를 추가한다.
+  import PostList from '@/components/PostList'
+
+  // 커스텀마이징된 `axios` 객체를 추가한다.
+  import api from '@/api'
+
+  export default {
+    name: 'PostListPage',
+    components: {
+      PostList
+    },
+	
+    // 컴포넌트 내에 데이터를 생성한다.
+    data () {
+      return {
+        posts: []
+      }
+    },
+    
+    // created 훅에서 API를 호출한 후 컴포넌트 내의 데이터에 해당 결과값을 대입한다.
+    created () {
+      api.get('/posts')
+        .then(res => {
+          this.posts = res.data
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    }
+  }
+</script>
+```
+
+### 3.5  `components`내에 있는 `PostList` 의 `template` 수정
 
 ```vue
 // board-application/src/components/PostList.vue
@@ -191,8 +293,8 @@ export default new Router({
         <tr v-for="post in posts" :key="post.id">
           <td scope="col">{{ post.id }}</td>
           <td scope="col">
-          	 <router-link :to="{ name: 'PostListPage' }">{{ post.title }}</router-link> 
-		  	[댓글 수: {{ post.comments.length }}]</td>
+          <router-link :to="{ name: 'PostListPage' }">{{ post.title }}</router-link> [댓글 수: {{ post.comments.length }}]
+          </td>
           <td scope="col">{{ post.user.name }}</td>
           <td scope="col">{{ post.createdAt }}</td>
         </tr>
@@ -202,7 +304,7 @@ export default new Router({
 </template>
 ```
 
-### 2.6
+### 3.6  `components`내에 있는 `PostList` 의 `script` 수정
 
 ```vue
 // board-application/src/components/PostList.vue
@@ -222,22 +324,7 @@ export default new Router({
 </script>
 ```
 
-## 3. Axios 
+## 
 
-### 3.1 Axios 설치
-
-```bash
-$ npm install axios --save
-```
-
-### 3.2 파일 생성 및 객체 생성
-
-- src 디렉터리 내에 api 디렉터리를 생성하고, index.js를 생선한다.
-- 
-
-```
-// board-application/src/api/index.js
-
-
-```
+## 4. 결과
 

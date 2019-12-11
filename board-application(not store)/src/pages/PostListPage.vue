@@ -12,6 +12,7 @@
   // PostList 컴포넌트를 추가한다.
   import PostList from '@/components/PostList'
 
+  // 커스텀마이징된 `axios` 객체를 추가한다.
   import api from '@/api'
 
   export default {
@@ -26,6 +27,7 @@
         posts: []
       }
     },
+    
     created () {
       api.get('/posts')
         .then(res => {
