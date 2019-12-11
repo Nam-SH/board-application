@@ -1,4 +1,8 @@
 export default {
   posts: [],
-  post: null
+  post: null,
+
+  accessToken: '',
+  me: null
+
 }

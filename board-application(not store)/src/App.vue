@@ -10,7 +10,10 @@ export default {
 }
 </script>
 
+
 <style>
-@import 'http://localhost:8000/assets/index.css'
+
+/* 스타일을 적용시킨다. */
+@import 'http://localhost:8000/assets/index.css';
 
 </style>

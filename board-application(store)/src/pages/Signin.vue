@@ -9,7 +9,11 @@
 
 <script>
   import SigninForm from '@/components/SigninForm'
-  import api from '@/api'
+
+  // import api from '@/api'
+
+  // mapActions에 중괄호 꼭 하기
+  import { mapActions } from 'vuex'
 
   export default {
     name: 'Signin',
@@ -17,15 +21,26 @@
       SigninForm
     },
     methods: {
+      
       onSubmit (payload) {
         // console.log(payload)
-        const { email, password } = payload
-        api.post('/auth/signin', { email, password })
+        // const { email, password } = payload
+        // api.post('/auth/signin', { email, password })
+        this.signin(payload)
           .then(res => {
-            console.log(res.data)
+            // console.log(res.data.accessToken)
+            // const { accessToken } = res.data.accessToken
+            // api.defaults.headers.common.Authorization = `Bearer ${accessToken}`
+
+            alert('로그인 되었습니다.')
+            this.$router.push({ name: 'PostListPage' })
           })
-      }
-    },
+          .catch(err => {
+            alert(err.response.data.msg)
+          })
+      },
+      ...mapActions([ 'signin' ])
+    }
   }
 </script>
 
