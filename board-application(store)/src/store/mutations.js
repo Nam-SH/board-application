@@ -38,6 +38,6 @@ export default {
 
   [DESTROY_MY_INFO] (state) {
     state.me = null
-  }
+  },
 
 }

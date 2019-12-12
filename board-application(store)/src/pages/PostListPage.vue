@@ -12,8 +12,7 @@
   import PostList from '@/components/PostList'
 
   // import api from '@/api'
-  import { mapActions } from 'vuex'
-  import { mapState } from 'vuex'
+  import { mapActions, mapState } from 'vuex'
 
 
   export default {
