@@ -1,6 +1,6 @@
 <template>
   <div class="app-header">
-    <h1>Community</h1>
+    <router-link :to="{ name: 'PostListPage' }"><h1>Community</h1></router-link>
     <div v-if="isAuthorized">
       <strong>
         <button @click="toggle" > 안녕!! {{ me.name }}({{ me.email }})!!
@@ -17,7 +17,6 @@
     </div>
   </div>
 </template>
-
 
 <script>
   import { mapGetters, mapState, mapActions } from 'vuex'

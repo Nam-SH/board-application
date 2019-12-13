@@ -24,10 +24,5 @@
         }
       }
     }
-    
   }
 </script>
-
-<style scoped>
-
-</style>
