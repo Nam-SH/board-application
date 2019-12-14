@@ -10,17 +10,12 @@ export default {
         commit(FETCH_POST_LIST, res.data)
       })
   },
-
-  // FETCH_POST 변이를 일으킬 액션함수 작성
-  // postId를 인자로 받을 fetchPost를 작성
-  // API 요청 시 인자로 받은 postId를 URI에 포함
   fetchPost({ commit }, postId) {
     return api.get(`/posts/${postId}`)
       .then(res => {
         commit(FETCH_POST, res.data)
       })
   },
-
   signin ({ commit }, payload) {
     return api.post('/auth/signin', {
       email: payload.email,
@@ -33,7 +28,6 @@ export default {
       commit(SET_MY_INFO, res.data)
     })
   },
-
   signinByToken ({ commit }, token) {
     commit(SET_ACCESS_TOKEN, token)
     return api.get('/users/me')
@@ -41,12 +35,10 @@ export default {
         commit(SET_MY_INFO, res.data)
       })
   },
-
   signout ({ commit }) {
     commit(DESTROY_MY_INFO)
     commit(DESTROY_ACCESS_TOKEN)
   },
-
   createComment ({ commit, state }, comment) {
     const postId = state.post.id
     return api.post(`posts/${postId}/comments`, { contents: comment })
@@ -54,7 +46,6 @@ export default {
         commit(UPDATE_COMMENT, res.data)
       })
   },
-
   editComment ({ commit, state }, { commentId, comment }) {
     const postId = state.post.id
     return api.put(`/posts/${postId}/comments/${commentId}`, { contents: comment })
@@ -62,7 +53,6 @@ export default {
               commit(EDIT_COMMENT, res.data)
             })
   },
-
   deleteComment ({ commit, state }, { commentId }) {
     const postId = state.post.id
     return api.delete(`/posts/${postId}/comments/${commentId}`)
@@ -70,5 +60,4 @@ export default {
               commit(DELETE_COMMENT, commentId)
             })
   }
-  
 }

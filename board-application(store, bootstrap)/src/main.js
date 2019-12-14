@@ -1,27 +1,15 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
-
-Vue.config.productionTip = false
-
 import store from './store'
-
 import Cookies from 'js-cookie'
 
+import BootstrapVue from 'bootstrap-vue'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap-vue/dist/bootstrap-vue.css'
 
-// const savedToken = Cookies.get('accessToken')
-// if (savedToken) {
-//   store.dispatch('signinByToken', savedToken)
-// }
-
-// new Vue({
-//   el: '#app',
-//   router,
-//   store,
-//   components: { App },
-//   render: h => h(App),
-//   template: '<App/>'
-// })
+Vue.config.productionTip = false
+Vue.use(BootstrapVue)
 
 function init() {
   const savedToken = Cookies.get('accessToken')
@@ -32,7 +20,6 @@ function init() {
     return Promise.resolve()
   }
 }
-
 init().then(() => {
   new Vue({
     el: '#app',

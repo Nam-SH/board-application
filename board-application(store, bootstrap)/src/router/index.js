@@ -8,9 +8,7 @@ import PostEditPage from '@/pages/PostEditPage'
 
 import Signup from '@/pages/Signup'
 import Signin from '@/pages/Signin'
-
 import AppHeader from '@/components/AppHeader'
-
 import store from '@/store'
 
 Vue.use(Router)
@@ -54,13 +52,10 @@ export default new Router({
         header: AppHeader,
         default: PostViewPage
       },
-
-      // PostViewPage의 props에 접근해서 postId를 가져오기 위해 true값으로 설정해준다.
       props: {
         default: true
       }
     },
-
     {
       path: '/post/:postId/edit',
       name: 'PostEditPage',
@@ -96,7 +91,6 @@ export default new Router({
           })
       }
     },
-
     {
       path: '/signup',
       name: 'Signup',
@@ -105,7 +99,6 @@ export default new Router({
         default: Signup
       },
     },
-
     {
       path: '/signin',
       name: 'Signin',

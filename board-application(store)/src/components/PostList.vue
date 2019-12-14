@@ -21,6 +21,7 @@
           <!-- <td scope="col">{{ post.id }}</td> -->
 
           <td scope="col">
+            <!-- params에 게시글의 고유한 번호를 postId 파라미터로 추가한다.(숫자이므로 문자열로 바꿔서 추가) -->
           <router-link :to="{ name: 'PostViewPage', params: { postId: post.id.toString() } }">{{ post.title }}</router-link> [{{ post.comments.length }}]
           </td>
           

@@ -41,9 +41,7 @@
     methods: {
       ...mapActions([ 'fetchPost', 'createComment' ]),
       onDelete () {
-        // console.log(this.post)
         const { id } = this.post
-        // console.log(id)
         api.delete(`/posts/${id}`)
           .then(res => {
             alert('게시물이 성공적을 삭제되었습니다.')
@@ -59,7 +57,6 @@
           })
       },
       onCommentSubmit (comment) {
-        // console.log(comment)
         if (!this.isAuthorized) {
           alert('로그인이 필요합니다.')
           this.$router.push({ name: 'Signin' })

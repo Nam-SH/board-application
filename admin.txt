@@ -1,0 +1,2 @@
+ID: admin@candovue.com
+PW: admin123

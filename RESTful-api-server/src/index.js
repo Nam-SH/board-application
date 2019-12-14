@@ -32,9 +32,7 @@ app.use('/api', api({ config }));
 app.use('/assets', express.static('src/assets'));
 
 app.server.listen(process.env.PORT || config.port, () => {
-  console.log('=======================================================================================================');
   console.log(`API 서버가 성공적으로 실행되었습니다. 브라우저를 통해 localhost:${app.server.address().port}에 접속해보세요!`);
-  console.log('=======================================================================================================');
 });
 
 export default app;
