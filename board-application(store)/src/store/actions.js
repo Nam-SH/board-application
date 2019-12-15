@@ -22,14 +22,14 @@ export default {
   },
 
   signin ({ commit }, payload) {
-    return api.post('/auth/signin', {
-      email: payload.email,
-      password: payload.password
-    }).then(res => {
+    const { email, password } = payload
+    return api.post('/auth/signin', { email, password } )
+    .then(res => {
       const { accessToken } = res.data
       commit(SET_ACCESS_TOKEN, accessToken)
       return api.get('/users/me')
     }).then(res => {
+      // console.log('signin-SET_MY_INFO', res)
       commit(SET_MY_INFO, res.data)
     })
   },
@@ -70,5 +70,5 @@ export default {
               commit(DELETE_COMMENT, commentId)
             })
   }
-  
+
 }

@@ -13,14 +13,12 @@
 <script>
   export default {
     name: 'SigninForm',
-
     data () {
       return {
         email: '',
         password: '',
       }
     },
-
     methods: {
       submit () {
         const { email, password } = this
@@ -29,7 +27,3 @@
     }
   }
 </script>
-
-<style scoped>
-
-</style>

@@ -25,6 +25,7 @@ export default {
   },
 
   [SET_MY_INFO] (state, me) {
+    // console.log('me', me)
     if (me) {
       state.me = me
     }

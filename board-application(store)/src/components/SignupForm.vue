@@ -2,7 +2,7 @@
   <form @submit.prevent="submit" novalidate>
     <fieldset>
       <input type="text" v-model="name" placeholder="홍길동">
-      <input type="text" v-model="email" placeholder="abc123@google.com"">
+      <input type="text" v-model="email" placeholder="abc123@google.com">
       <input type="password" v-model="password" placeholder="최소 8자 입력하시오">
       <input type="password" v-model="passwordConfirm" placeholder="비밀번호를 다시 한번 입력하시오">
       
@@ -39,7 +39,3 @@
     }
   }
 </script>
-
-<style scoped>
-
-</style>

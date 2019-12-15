@@ -20,7 +20,9 @@
     methods: {
       onSubmit (payload) {
         // console.log(payload)
-        const { email, name, password } = payload
+        const { name, email, password } = payload
+        
+        // 이상없이 받아온 데이터를 API서버로 회원가입 요청을 한다.
         api.post('/auth/signup', { name, email, password })
           .then(res => {
             alert('회원가입이 완료되었습니다.')
@@ -33,7 +35,3 @@
     }
   }
 </script>
-
-<style scoped>
-
-</style>
