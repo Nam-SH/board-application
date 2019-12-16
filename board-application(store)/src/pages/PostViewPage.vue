@@ -12,11 +12,8 @@
 
 <script>
   import { mapActions, mapState, mapGetters } from 'vuex'
-
   import PostView from '@/components/PostView'
-
   import api from '@/api'
-
   import CommentList from '@/components/CommentList'
   import CommentForm from '@/components/CommentForm'
 

@@ -9,9 +9,7 @@
 
 <script>
 import { mapState } from 'vuex';
-
 import PostEditForm from '@/components/PostEditForm'
-
 import api from '@/api'
 
   export default {

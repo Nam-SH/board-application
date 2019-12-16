@@ -19,7 +19,6 @@ export default {
     if (accessToken) {
       state.accessToken = accessToken
       api.defaults.headers.common.Authorization = `Bearer ${accessToken}`
-
       Cookies.set('accessToken', accessToken)
     }
   },

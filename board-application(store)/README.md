@@ -509,31 +509,24 @@ export default new Router({
 
 <script>
   import { mapActions, mapState } from 'vuex'
-
   import PostView from '@/components/PostView'
-
   import api from '@/api'
 
   export default {
     name: 'PostViewPage',
-
     components: {
       PostView
     },
-    
     computed: {
       // mapState 헬퍼 함수를 통해 컴포넌트의 데이터에 post를 매핑한다.
       ...mapState([ 'post' ])
     },
-    
     props: {
       ...
     },
-    
     methods: {
       ...mapActions([ 'fetchPost' ]),
     },
-    
     created () {
       ...
     }
@@ -792,7 +785,6 @@ export default new Router({
 
 <script>
   import SigninForm from '@/components/SigninForm'
-
   import api from '@/api'
 
   export default {
@@ -824,7 +816,6 @@ import Router from 'vue-router'
 import Signin from '@/pages/Signin'
 
 export default new Router({
-
   mode: 'history',
   routes: [
 	...
@@ -873,7 +864,7 @@ export default new Router({
 ### 6.2 JWT토큰 사용
 
 ```vue
-
+// src/pages/Signin.vue
 
 <script>
   import SigninForm from '@/components/SigninForm'
@@ -941,7 +932,6 @@ export const SET_ACCESS_TOKEN = 'SET_ACCESS_TOKEN'
 // src/store/mutations.js
 
 import { FETCH_POST_LIST, FETCH_POST, SET_ACCESS_TOKEN,  } from './mutations-types'
-
 import api from '@/api'
 
 export default {
@@ -997,7 +987,6 @@ export default {
 // src/store/mutations.js
 
 import { FETCH_POST_LIST, FETCH_POST, SET_ACCESS_TOKEN,  } from './mutations-types'
-
 import api from '@/api'
 
 export default {
@@ -1236,7 +1225,7 @@ export default {
 ```
 
 ```javascript
-// 
+// src/main.js
 
 import Vue from 'vue'
 ...
@@ -2020,7 +2009,7 @@ export default new Router({
 ```
 
 ```vue
-// src/pages/PostViewPage.vue
+// src/pages/PostEditPage.vue
 
 <template>
   <div class="post-edit-page">
@@ -2034,9 +2023,7 @@ export default new Router({
 
 <script>
 import { mapState } from 'vuex';
-
 import PostEditForm from '@/components/PostEditForm'
-
 import api from '@/api'
 
   export default {
@@ -2069,11 +2056,15 @@ import api from '@/api'
               params: { postId: res.data.id.toString() }
             })
           })
+          
+          // 라우터에서 beforeEnter로 막았지만, PostEditPage.vue가 /post/:pistId/edit에만 사용이 되지 
+		 // 않을  수 있다. 따라서 해당 onSubmit에서도 적절한 예외처리와 경고 메세지를 노출시켜야 한다.
           .catch(err => {
             if (err.response.status === 401) {
               alert('로그인이 필요합니다.')
               this.$router.push({ name: 'Signin' })
             }
+            // 사용자가 이 게시물을 수정할 권한이 없다면, 이전 페이지로 이동시킨다.
             else if (err.response.status === 403) {
               alert(err.response.data.msg)
               this.$router.back()
@@ -2092,11 +2083,264 @@ import api from '@/api'
 
 ## 10.  게시물 삭제 페이지 작성
 
+- 게시물 상세보기 페이지의 하단 수정 버튼과 목록 버튼 사이에 삭제 버튼을 추가하고 삭제 기능을 담당할 onDelte함수를 선언한다.
+
+```vue
+// src/pages/PostViewPage.vue
+
+<template>
+  <div class="post-view-page">
+    <post-view v-if="post" :post="post" />
+    <p v-else>게시글 불러오는 중...</p>
+    <router-link :to="{ name: 'PostEditPage', params: { postId } }">수정!</router-link>
+      
+    <!-- 1. 삭제 버튼과 onDelete 함수를 클릭 이벤트 리스너에 추가한다. -->
+    <button @click="onDelete">삭제!</button>
+    <router-link :to="{ name: 'PostListPage' }">목록!</router-link>
+  </div>
+</template>
+
+<script>
+  import { mapActions, mapState } from 'vuex'
+  import PostView from '@/components/PostView'
+  import api from '@/api'
+
+  export default {
+    name: 'PostViewPage',
+
+    components: {
+      PostView,
+      CommentList,
+      CommentForm
+    },
+    computed: {
+      ...mapState(['post']),
+    },
+    props: {
+      postId: {
+        type: String,
+        required: true
+      }
+    },
+    methods: {
+      ...mapActions([ 'fetchPost' ]),
+        
+      // 2. onDelete 함수를 선언한다.
+      onDelete () {
+        // const id = this.postId
+        const { id } = this.post
+        api.delete(`/posts/${id}`)
+          .then(res => {
+            alert('게시물이 성공적을 삭제되었습니다.')
+            this.$router.push({ name: 'PostListPage' })
+          })
+          .catch(err => {
+            if (err.response.status === 401) {
+              alert('로그인이 필요합니다.')
+              this.$router.push({ name: 'Signin' })
+            } else {
+              // 삭제의 권한이 없는 등의 경우에는 에러창을 띄운다.
+              alert(err.response.data.msg)
+            }
+          })
+      }
+    },
+    created () {
+      this.fetchPost(`/${this.postId}`)
+        .catch(err => {
+          alert(err.response.data.msg)
+          this.$router.back()
+        })
+    }
+  }
+</script>
+```
+
+
+
 ## 11. 게시물에 댓글 기능 추가
 
 ### 11.1 댓글 노출 기능추가
 
+```
+
+```
+
+```vue
+// src/components/CommentList.vue
+
+<template>
+  <ul class="comments">
+	<li>
+    	<div class="comment-item">
+            <strong>홍길동</strong><span>2019-01-01 09:00:00</span>
+            <p>댓글에 대한 테스트 컴포넌트 입니다.</p>
+    	</div>
+    </li>
+  </ul>
+</template>
+
+<script>
+  export default {
+    name: 'CommentList'
+  }
+</script>
+```
+
+```vue
+// src/pages/PostViewPage.vue
+
+<template>
+  <div class="post-view-page">
+    <post-view v-if="post" :post="post" />
+    <p v-else>게시글 불러오는 중...</p>
+    <router-link :to="{ name: 'PostEditPage', params: { postId } }">수정!</router-link>
+    <button @click="onDelete">삭제!</button>
+    <router-link :to="{ name: 'PostListPage' }">목록!</router-link>
+      
+    <!-- CommentList 컴포넌트에 comments 데이터를 Props를 통해 전달한다. -->
+    <comment-list v-if="post" :comments="post.comments" />
+  </div>
+</template>
+
+<script>
+  ...,
+  import CommentList from '@/components/CommentList'
+
+  export default {
+    name: 'PostViewPage',
+    components: {
+      PostView,
+      CommentList
+    },
+    ...
+    }
+  }
+</script>
+```
+
+```vue
+// src/components/CommentList.vue
+
+<template>
+  <ul class="comments">
+    <li v-if="comments.length <= 0">댓글이 없습니다.</li>
+    <li v-for="comment in comments" :key="comment.id"> 
+      <comment-item :comment="comment"/>
+    </li>
+  </ul>
+</template>
+
+<script>
+  import CommentItem from "@/components/CommentItem"
+  
+  export default {
+    name: 'CommentList',
+    components: {
+      CommentItem
+    },
+    
+    // 1. comments를 props에 등록한다.
+    props: {
+      comments: {
+        type: Array,
+        default () {
+          return []
+        }
+      }
+    },
+  }
+</script>
+```
+
+```vue
+// src/components/CommentItem.vue
+
+<template>
+  <div class="comment-item">
+    <strong>{{ comment.user.name }}</strong><span>{{ comment.createdAt }}</span>
+    <p>{{ comment.contents }}</p>
+    <ul>
+      <li> <button type="button">수정</button> </li>
+      <li> <button type="button">삭제</button> </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'CommentItem',
+    props: {
+      comment: {
+        type: Object,
+        required: true,
+        validator (comment) {
+          const isValidCommentId = typeof comment.id === 'number'
+          const isValidContents = comment.contents && comment.contents.length
+          const isValidUser = !!comment.user
+          return isValidCommentId && isValidContents && isValidUser
+        }
+      }
+    }
+  }
+</script>
+```
+
+- 댓글의 수정과 삭제 버튼이 작성한 작성자만이 보이게끔 설정한다.
+
+```vue
+// src/components/CommentItem.vue
+
+<template>
+  <div class="comment-item">
+    <strong>{{ comment.user.name }}</strong><span>{{ comment.createdAt }}</span>
+
+    <div v-if="isEditing">
+      <textarea v-model="editMessage" rows="3"></textarea>
+      <button @click="onEdit">수정완료</button>
+    </div>
+    <p v-else>{{ comment.contents }}</p>
+
+    <!-- 4. isMyComment가 참일 경우에만 수정, 삭제버튼을 노출한다. -->
+    <ul v-if="isMyComment">
+      <li> <button type="button" @click="toggleEditMode">수정</button> </li>
+      <li> <button type="button" @click="onDelete">삭제</button> </li>
+    </ul>
+
+  </div>
+</template>
+
+<script>
+import { mapState, mapGetters } from 'vuex'
+
+export default {
+  name: 'CommentItem',
+  ...,
+  computed: {
+    // 1. 현재 로그인한 사용자의 정보를 스토어의 상태를 참조하여 가져온다.
+    ...mapState(['me']),
+    // 2. 현재 로그인 여부를 알 수 있는 isAuthorized 게터를 가져온다.
+    ...mapGetters(['isAuthorized']),
+    // 3. 댓글을 작성한 사용자의 아이디와 현재 로그인한 사용자의 아이디(me)를 비교한다.
+    isMyComment() {
+      return this.isAuthorized && this.comment.user.id === this.me.id
+    }
+  }
+}
+</script>
+```
+
 ### 11.2 댓글 생성 기능 추가
+
+```
+
+```
+
+```
+
+```
+
+
 
 ### 11.3 댓글 수정 기능 추가
 

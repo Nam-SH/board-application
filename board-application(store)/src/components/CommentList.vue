@@ -5,7 +5,6 @@
       <comment-item :comment="comment" @edit="onEdit" @delete="onDelete" />
     </li>
   </ul>
-  
 </template>
 
 <script>

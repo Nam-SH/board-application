@@ -25,26 +25,22 @@
 <script>
   export default {
     name: 'PostEditForm',
-
     data () {
       return {
         title: '',
         contents: ''
       }
     },
-    
     created() {
       this.title = this.post.title
       this.contents = this.post.contents
     },
-
     methods: {
       onSubmit () {
         const { title, contents } = this
         this.$emit('submit', { title, contents })
       }
     },
-
     props: {
       post: {
         type: Object,
@@ -57,13 +53,11 @@
         }
       }
     },
-
     methods: {
       onSubmit () {
         const { title, contents } = this
         this.$emit('submit', { title, contents })
       }
     }
-    
   }
 </script>

@@ -28,7 +28,6 @@ export default new Router({
         default: PostListPage
       }
     },
-
     {
       path: '/post/create',
       name: 'PostCreatePage',
@@ -47,7 +46,6 @@ export default new Router({
         next()
       }
     },
-
     {
       path: '/post/:postId',
       name: 'PostViewPage',
@@ -61,7 +59,6 @@ export default new Router({
         default: true
       }
     },
-
     {
       path: '/post/:postId/edit',
       name: 'PostEditPage',
@@ -80,7 +77,7 @@ export default new Router({
           return
         }
         store.dispatch('fetchPost', to.params.postId)
-          .then(res => {
+          .then(() => {
             const post = store.state.post
             const isAuthor = (post.user.id === store.state.me.id)
             if (isAuthor) {
@@ -97,7 +94,6 @@ export default new Router({
           })
       }
     },
-
     {
       path: '/signup',
       name: 'Signup',
@@ -106,12 +102,10 @@ export default new Router({
         default: Signup
       },
     },
-
     {
       path: '/signin',
       name: 'Signin',
       component: Signin
     }
-
   ]
 })
