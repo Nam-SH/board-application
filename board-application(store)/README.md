@@ -1264,9 +1264,831 @@ new Vue({
 
 ## 7. 애플리케이션 헤더 컴포넌트 작성
 
+### 7.1 `Appheader.vue` 생성 후 작성
+
+```vue
+// src/components/AppHeader.vue
+
+<template>
+  <div class="app-header">
+    <router-link :to="{ name: 'PostListPage' }"><h1>Community</h1></router-link>
+    <div>
+      <router-link :to="{ name: 'Signin' }">Go:: 로그인</router-link>
+    </div>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'AppHeader'
+  }
+</script>
+```
+
+### 7.2 헤더 컴포넌트를 라우트에 등록하기
+
+```vue
+// src/App.vue
+
+<template>
+  <div id="app">
+      
+    <!-- router-view위에 app-header컴포넌트를 삽입하면 어떤 페이지를 이동하든 같은 페이지를 보여주는 
+     단점이 존재 한다. 따라서 Named Router View를 사용한다.-->
+    <app-header />
+    <router-view />
+  </div>
+</template>
+
+<script>
+import AppHeader from '@/components/AppHeader'
+export default {
+  name: 'App',
+  components: { AppHeader }
+}
+</script>
+```
+
+```vue
+// src/App.vue
+
+<template>
+  <div id="app">
+    
+    <!-- header라는 이름을 부여받은 router-view 컴포넌트 -->
+    <router-view name="header" />
+
+    <!-- name을 지정해주지 않으면, default라는 이름을 부여받는다. -->
+    <router-view />
+
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App',
+}
+</script>
+```
+
+```javascript
+// src/router/index.js
+
+// ...
+import AppHeader from '@/components/AppHeader'
+
+export default new Router({
+
+  mode: 'history',
+  routes: [
+    {
+      path: '/post/:postId',
+      name: 'PostViewPage',
+        
+      // components 속성을 사용해서 원하는 컴포넌트를 렌더할 수 있도록 한다.
+      components: {
+        header: AppHeader,
+        default: PostViewPage
+      },
+
+      // PostViewPage의 props에 접근해서 postId를 가져오기 위해 true값으로 설정해준다.
+      // props값 또한 components의 이름으로 수정한다.
+      props: {
+        default: true
+      }
+    },
+
+    {
+      path: '/signin',
+      name: 'Signin',
+        
+      // components가 아닌 component를 사용하면 자동으로 이름이 없는 router-view에 컴포넌트에만 렌더한다.
+      component: Signin
+    }
+  ]
+})
+```
+
+### 7.3 헤더 컴포넌트 기능 추가
+
+- 사용자 로그아웃 기능
+- 사용자 이름, 이메일을 보여주는 기능
+- 비로그인 상태일 때 로그인 페이지로 이동할 수 있는 링크
+
+```javascript
+// src/store/getters.js
+
+export default {
+
+  // 현재 로그인된 상태를 알 수 있도록 스토어에 Boolean 잘형으로 변경하여 반환해줄 게터를 작성한다.
+  // acceeToken이 존재하고, me의 사용자 데이터가 있을때에만 true를 반환한다.
+  isAuthorized (state) {
+    return state.accessToken.length > 0 && !!state.me
+  }
+}
+```
+
+```vue
+// src/components/AppHeader.vue
+
+<template>
+  <div class="app-header">
+    <router-link :to="{ name: 'PostListPage' }"><h1>Community</h1></router-link>
+      
+      <!-- 2. 로그인한 상태라면 사용자에게 인사한다. -->
+      <div v-if="isAuthorized">
+      <strong>
+        <button> 안녕!! 사용자
+        </button>
+      </strong>
+    </div>
+      
+    <!-- 3. 로그인한 상태가 아니라면 로그인 버튼을 보여준다. -->
+    <div v-else>
+      <router-link :to="{ name: 'Signin' }">Go:: 로그인</router-link>
+    </div>
+      
+  </div>
+</template>
+
+<script>
+  import { mapGetters } from 'vuex'
+
+  export default {
+    name: 'AppHeader',
+    computed: {
+        
+      // 1. mapGetters 헬퍼함수를 통해 isAuthorized를 등록한다.
+      ...mapGetters(['isAuthorized'])
+    }
+  }
+</script>
+```
+
+### 7.4 `AppHeader`에 사용자 정보 넣기
+
+```vue
+// src/components/AppHeader.vue
+
+<template>
+  <div class="app-header">
+    <router-link :to="{ name: 'PostListPage' }"><h1>Community</h1></router-link>
+    <div v-if="isAuthorized">
+      <strong>
+          
+        <!-- 사용자 =>  me.name, me.email 으로 변경한다. -->
+        <button @click="toggle"> {{ me.name }}({{ me.email }})
+        </button>
+      </strong>
+    </div>
+    <div v-else>
+      <router-link :to="{ name: 'Signin' }">Go:: 로그인</router-link>
+    </div>
+  </div>
+</template>
+
+<script>
+  import { mapGetters, mapState } from 'vuex'
+
+  export default {
+    name: 'AppHeader',
+    computed: {
+      ...mapGetters(['isAuthorized']),
+        
+      // 1. store의 me 상태를 추가한다.
+      ...mapState(['me'])
+    }
+  }
+</script>
+```
+
+### 7.5 로그아웃 구현하기
+
+```javascript
+// src/store/mutations-types.js
+
+// 제거(Destroy) 기능을 담당할 변이 타입을 작성한다.
+export const DESTROY_ACCESS_TOKEN = 'DESTROY_ACCESS_TOKEN'
+export const DESTROY_MY_INFO = 'DESTROY_MY_INFO'
+```
+
+```javascript
+// src/store/mutations.js
+
+export default {
+  [DESTROY_ACCESS_TOKEN] (state) {
+    state.accessToken = ''
+    // header의 토큰을 삭제한다.
+    delete api.defaults.headers.common.Authorization
+    // 쿠키에 있는 accessToken을 삭제하다.
+    Cookies.remove('accessToken')
+  },
+    
+  [DESTROY_MY_INFO] (state) {
+    // me의 상태를 null로 초기화한다.
+    state.me = null
+  }
+}
+```
+
+```javascript
+// src/store/actions.js
+
+export default {
+  signout ({ commit }) {
+    commit(DESTROY_MY_INFO)
+    commit(DESTROY_ACCESS_TOKEN)
+  }
+}
+```
+
+### 7.6 로그아웃 박스 토글 기능 추가하기
+
+```vue
+// src/components/AppHeader.vue
+
+<template>
+  <div class="app-header">
+    <router-link :to="{ name: 'PostListPage' }"><h1>Community</h1></router-link>
+    <div v-if="isAuthorized">
+      <strong>
+          
+        <!-- click이벤트시 toggle이 실행되게 한다. -->
+        <button @click="toggle" > 안녕!! {{ me.name }}({{ me.email }})!!
+          <i v-if="!isActive" class="fas fa-sort-down" ></i>
+          <i v-else class="fas fa-sort-up" ></i>
+        </button>
+      </strong>
+      <!-- isActive가 true일 경우에만 로그아웃 창을 보이게한다. -->
+      <ul v-if="isActive">
+          
+        <!-- 로그아웃 버튼의 클릭 이벤트 리스너로 onClickSignout 메소드를 할당한다. -->
+        <li><button @click="onClickSignout">로그아웃</button></li>
+      </ul>
+    </div>
+    <div v-else>
+      <router-link :to="{ name: 'Signin' }">Go:: 로그인</router-link>
+    </div>
+  </div>
+</template>
+
+<script>
+  import { mapGetters, mapState, mapActions } from 'vuex'
+
+  export default {
+    name: 'AppHeader',
+    data () {
+      ...
+    },
+    computed: {
+      ...
+    },
+    methods: {
+      toggle () {
+        this.isActive = !this.isActive
+      },
+	 // 
+      onClickSignout () {
+        // signout 액션을 실행한다.
+        this.signout()
+        // PostLIstPage 창으로 이동시킨다.
+        this.$router.push({ name: 'PostListPage' })
+      },
+	 // 2. mapActions 헬퍼함수를 사용하여 singout 액션을 등록한다.
+      ...mapActions(['signout'])
+    }
+  }
+</script>
+```
+
+### 
+
 ## 8. 게시물 생성 페이지 작성
 
+### 8.1 게시물 생성 페이지 컴포넌트 작성하기
+
+```
+
+```
+
+```vue
+// src/pages/PostCreatePage.vue
+
+<template>
+  <div class="post-create-page">
+    <h3>게시물 작성하기</h3>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'PostCreatePage'
+  }
+</script>
+```
+
+```javascript
+// src/router/index.js
+
+export default new Router({
+  mode: 'history',
+  routes: [
+    ...,
+    // /post/:postId와 형식이 같으므로, postId의 라우터보다 위에 위치시킨다.
+    // create와 일치하는 URL을 가졌는지를 우선적으로 판단하고, 일치하지 않으면 :postId 라우트로 이동한다.
+    {
+      path: '/post/create',
+      name: 'PostCreatePage',
+      components: {
+        header: AppHeader,
+        default: PostCreatePage
+      }
+    },
+    {
+      path: '/post/:postId',
+      name: 'PostViewPage',
+      ...
+    },
+    ...,
+  ]
+}
+```
+
+### 8.2 게시물 생성 폼 컴포넌트 작성하기
+
+```
+
+```
+
+```vue
+// src/components/PostCreateForm.vue
+
+<template>
+  <form @submit.prevent="onSubmit" >
+    <fieldset>
+      <label>제목</label>
+      <input v-model="title" type="text" placeholder="게시물 제목을 입력해주세여">
+      <label>내용</label>
+      <textarea v-model="contents" type="text" placeholder="게시물 내용을 입력해주세여"> </textarea>
+      <button type="submit">제출!</button>
+    </fieldset>
+  </form>
+</template>
+
+<script>
+  export default {
+    name: 'PostCreateForm',
+    data () {
+      return {
+        title: '',
+        contents: ''
+      }
+    },
+    methods: {
+      onSubmit () {
+        const { title, contents } = this
+        this.$emit('submit', { title, contents })
+      }
+    }
+    
+  }
+</script>
+```
+
+### 8.3 게시물 생성 API 연동하기
+
+```vue
+// src/pages/PostCreatePage.vue
+
+<template>
+  <div class="post-create-page">
+    <h3>게시물 작성하기</h3>
+      
+    <!-- 2. PostCreateForm 컴포넌트 뷰를 추가한다. -->
+    <post-create-form @submit="onSubmit" />
+  </div>
+</template>
+
+
+<script>
+  import PostCreateForm from '@/components/PostCreateForm'
+  import api from '@/api'
+
+  export default {
+    name: 'PostCreatePage',
+    components: {
+      PostCreateForm
+    },
+    methods: {
+        
+      // submit 이벤트가 호출되면 실행될 메소드를 선언한다.
+      onSubmit (payload) {
+        const { title, contents } = payload
+        api.post('/posts', { title, contents })
+          .then(res => {
+            alert('게시물이 성공적으로 작성되었습니다.')
+
+            this.$router.push({
+              name: 'PostViewPage',
+              params: { postId: res.data.id.toString() }
+            })
+          })
+      } 
+    }
+  }
+</script>
+```
+
+### 8.4 게시물 생성 페이지 내비게이션 가드 구현
+
+- 로그인되어 있는 사용자만이 게시물 생성 페이지에 접근할 수 있어야 한다.
+- API서버에서 로그인되어 있지 않은 사용자가 게시물 생성을 시도할 경우 401에러를 내려주겠지만, 클라이언트에서도 최소한의 방어를 해야 한다.
+- 전역 가드: 애플리케이션의 라우트가 변경될 때마다 애플리케이션 전역에서 통용되는 가드
+- 컴포넌트 가드: 라우트에 해당 컴포넌트가 있을 경우 호출되는 가드
+- 여기서 사용될 것은 게시물 생성 페이지에만 들어맞는 개념이므로, 컴포넌트 가드를 사용할 것이다.
+
+```javascript
+// src/router/index.js
+
+export default new Router({
+  mode: 'history',
+  routes: [
+    ...,
+    {
+      path: '/post/create',
+      name: 'PostCreatePage',
+      components: {
+        header: AppHeader,
+        default: PostCreatePage
+      },
+
+      // 내비게이션 가드 구현, beforeEnter 훅을 추가한다.
+      beforeEnter (to, from, next) {
+        const { isAuthorized } = store.getters
+        if (!isAuthorized) {
+          alert('로그인이 필요합니다.')
+          // 로그인이 되어있지 않다면, 로그인 페이지로 이동시킨다.
+          next({ name: 'Signin' })
+        }
+        next()
+      }
+    },
+    ...
+  ]
+})
+```
+
+### 8.5 애플리케이션 초기화 시 발생하는 통신 동기화 버그 수정
+
+```js
+// src/main.js
+
+const savedToken = Cookies.get('accessToken')
+if (savedToken) {
+  store.dispatch('signinByToken', savedToken)
+}
+
+// 이런 식으로 짜여있는 경우, if (savedToken)~~ 이 끝나고 signinByToken액션이 실행된 후에, 
+// Vue 인스턴스 가 생성된 다는 것을 보장하지 못한다. (비동기방식)
+new Vue({
+  el: '#app',
+  router,
+  store,
+  components: { App },
+  render: h => h(App),
+  template: '<App/>'
+})
+```
+
+```js
+// src/main.js (수정 후)
+
+function init() {
+  const savedToken = Cookies.get('accessToken')
+  if (savedToken) {
+    return store.dispatch('signinByToken', savedToken)
+  } else {
+    // Prmoise외 resolve 메소드는 비동기식로직의 성공, rejsect 메소드는 실패를 의미한다.
+    return Promise.resolve()
+  }
+}
+
+init()
+  .then(() => {
+    new Vue({
+      el: '#app',
+      router,
+      store,
+      components: {
+        App
+      },
+      render: h => h(App),
+      template: '<App/>'
+    })
+  })
+```
+
+### 8.6 게시물 리스트 페이지에 글쓰기 버튼 추가하기
+
+```vue
+
+
+<template>
+  <div class="post-list-page">
+    <h1>포스트 게시글</h1>
+    <post-list :posts="posts" />
+    <!-- 글쓰게 버튼을 추가하고, 게시물 생성 페이지로 링크를 이어준다. -->
+    <router-link :to="{ name: 'PostCreatePage' }">글쓰기</router-link>
+  </div>
+</template>
+```
+
+
+
 ## 9.  게시물 수정 페이지 작성
+
+### 9.1 게시물 수정 페이지 컴포넌트 작성
+
+```
+
+```
+
+```vue
+// src/pages/PostEditPage.vue
+
+<template>
+  <div class="post-edit-page">
+    <h1>게시물 수정</h1>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'PostEditPage',
+    components: {
+      PostEditForm
+    },
+    // 라우터의 파라미터를 받아오기 위한 props를 선언해준다.
+    props: {
+      postId: {
+        type: String,
+        required: true
+      }
+    }
+  }
+</script>
+```
+
+- 게시물을 구분하기 위한 postId 파라미터를 URL에 담아준다.
+- 이 인자는 라우터를 통해 컴포넌트의 props 속성으로 전달된다.
+  - 수정버튼은 PostViewPage에 추가한다.
+
+```js
+// src/router/index.js
+
+import PostEditPage from '@/pages/PostEditPage'
+
+export default new Router({
+  mode: 'history',
+  routes: [
+    {
+      path: '/post/:postId/edit',
+      name: 'PostEditPage',
+      components: {
+        header: AppHeader,
+        default: PostEditPage
+      },
+      props: {
+        default: true
+      }
+    },
+    ...,
+  ]
+})
+```
+
+```vue
+// src/pages/PostViewPage.vue
+
+<template>
+  <div class="post-view-page">
+    <post-view v-if="post" :post="post" />
+    <p v-else>게시글 불러오는 중...</p>
+    <!-- 게시물 수정 페이지 링크를 게시물 상세보기 페이지에 추가한다. -->
+    <router-link :to="{ name: 'PostEditPage', params: { postId } }">수정!</router-link>
+    <router-link :to="{ name: 'PostListPage' }">목록!</router-link>
+  </div>
+</template>
+```
+
+### 9.2 게시물 수정 페이지 내비게이션가드 구현하기
+
+- 해당 게시물이 유효한 게시물인지, 현재 로그인한 사용자가 이 게시물으 수정할 수 있는 사용자인지에 대한 검사를 추가로 작성해야 한다.
+- 존재하지 않는 게시물인 경우 서버는 404 상태 코드를 응답으로 보내준다.
+
+```js
+// src/router/index.js
+
+export default new Router({
+
+  mode: 'history',
+  routes: [
+	...,
+    {
+      path: '/post/:postId/edit',
+      name: 'PostEditPage',
+      components: {
+        header: AppHeader,
+        default: PostEditPage
+      },
+      props: {
+        default: true
+      },
+      beforeEnter: (to, from, next) => {
+        const { isAuthorized } = store.getters
+        
+        // 1. 비로그인 사용자는 접근할 수 없다.
+        if (!isAuthorized) {
+          alert('로그인이 필요합니다.')
+          next({ name: 'Signin' })
+          return
+        }
+        store.dispatch('fetchPost', to.params.postId)
+          .then(res => {
+            const post = store.state.post
+            
+            // 게시물 작성자의 아이디와 현재 로그인된 사용자의 아이디가 일치하는지 확인한다.
+            const isAuthor = (post.user.id === store.state.me.id)
+            if (isAuthor) {
+              // 일치한다면 라우팅을 그대로 진행한다.
+              next()
+            }
+            else {
+              alert('게시물을 수정할 권한이 없습니다.')
+              // 일치하지 않는다면 경고 문구를 노출시키고 이전 라우트로 이동시킨다.
+              next(from)
+            }
+          })
+          .catch(err => {
+            alert(err.response.data.msg)
+            next(from)
+          })
+      }
+    },
+    ...,
+  ]
+})
+```
+
+### 9.3 게시물 수정 폼 컴포넌트 작성하기
+
+- 게시물 생성 폼과 다른 점은 페이지 진입 시 기존 게시물에 대한 데이터를 가지고 있어야 한다.
+
+```
+
+```
+
+```vue
+// src/components/PostEditForm.vue
+
+<template>
+  <form @submit.prevent="onSubmit" >
+    <fieldset>
+      <!-- 게시물 번호 비활성 입력창에 게시물 번호 데이터를 연동한다. -->
+      <label>게시물 번호</label>
+      <input type="text" :value="post.id" disabled>
+        
+      <label>게시물 생성일</label>
+      <input type="text" :value="post.createdAt" disabled>
+      <label>제목</label>
+      <input v-model="title" type="text" placeholder="게시물 제목">
+      <label>내용</label>
+      <textarea v-model="contents" rows="5" type="text" placeholder="게시물 내용"> </textarea>
+      <button type="submit">수정!</button>
+      <router-link :to="{ name: 'PostViewPage', params: { postId: post.id } }">취소!</router-link>
+      
+    </fieldset>
+  </form>
+</template>
+
+<script>
+  export default {
+    name: 'PostEditForm',
+
+    data () {
+      return {
+        title: '',
+        contents: ''
+      }
+    },
+    
+    // 2. props로 받은 데이터는 반응형 데이터로 사용할 수 없기 때문에, 컴포넌트의 data 속성에 다시 할당한다.
+    created() {
+      this.title = this.post.title
+      this.contents = this.post.contents
+    },
+
+    methods: {
+      onSubmit () {
+        const { title, contents } = this
+        this.$emit('submit', { title, contents })
+      }
+    },
+	// 1. props를 사용하여 컴포넌트 외부로 부터 게시물 정보를 받는다.
+    props: {
+      post: {
+        type: Object,
+        required: true,
+        validator (post) {
+          const isValidPostId = typeof post.id === 'number'
+          const isValidTitle = !!post.title && post.title.length
+          const isValidContents = post.contents && post.contents.length
+          return isValidPostId && isValidTitle && isValidContents
+        }
+      }
+    },
+
+    methods: {
+      onSubmit () {
+        const { title, contents } = this
+        this.$emit('submit', { title, contents })
+      }
+    }
+    
+  }
+</script>
+```
+
+```vue
+// src/pages/PostViewPage.vue
+
+<template>
+  <div class="post-edit-page">
+    <h1>게시물 수정</h1>
+      
+    <!-- 게시물 데이터가 있는 경우에만 PoestEditForm을 렌더한다. -->
+    <post-edit-form v-if="post" :post="post" @submit="onSubmit" />
+    <p v-else>게시물 불러오는 중...</p>
+  </div>
+</template>
+
+<script>
+import { mapState } from 'vuex';
+
+import PostEditForm from '@/components/PostEditForm'
+
+import api from '@/api'
+
+  export default {
+    name: 'PostEditPage',
+    components: {
+      PostEditForm
+    },
+    props: {
+      postId: {
+        type: String,
+        required: true
+      }
+    },
+    computed: {
+      ...mapState(['post'])
+    },
+    methods: {
+        
+      // 1. PostEditForm의 submit 이벤트 핸들러인 onSubmit 메소드를 선언한다.
+      onSubmit (payload) {
+        const { title, contents } = payload
+        
+        // 2. PUT 메소드를 사용하여 서버로 게시물 데이터를 전송한다.
+        api.put(`/posts/${this.postId}`, { title, contents })
+          .then(res => {
+            // 3. 게시물 수정이 성공했다면 사용자를 다시 게시물 페이지로 이동시킨다.
+            alert('게시물이 성공적으로 수정되었습니다.')
+            this.$router.push({
+              name: 'PostViewPage',
+              params: { postId: res.data.id.toString() }
+            })
+          })
+          .catch(err => {
+            if (err.response.status === 401) {
+              alert('로그인이 필요합니다.')
+              this.$router.push({ name: 'Signin' })
+            }
+            else if (err.response.status === 403) {
+              alert(err.response.data.msg)
+              this.$router.back()
+            }
+            else {
+              alert(err.response.data.msg)
+            }
+          })
+      }
+    }
+  }
+</script>
+```
+
+
 
 ## 10.  게시물 삭제 페이지 작성
 

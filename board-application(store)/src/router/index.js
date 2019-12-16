@@ -37,6 +37,7 @@ export default new Router({
         default: PostCreatePage
       },
 
+      // 내비게이션 가드 구현
       beforeEnter (to, from, next) {
         const { isAuthorized } = store.getters
         if (!isAuthorized) {
@@ -76,7 +77,7 @@ export default new Router({
         if (!isAuthorized) {
           alert('로그인이 필요합니다.')
           next({ name: 'Signin' })
-          return false
+          return
         }
         store.dispatch('fetchPost', to.params.postId)
           .then(res => {

@@ -27,19 +27,21 @@ function init() {
   const savedToken = Cookies.get('accessToken')
   if (savedToken) {
     return store.dispatch('signinByToken', savedToken)
-  }
-  else {
+  } else {
     return Promise.resolve()
   }
 }
 
-init().then(() => {
-  new Vue({
-    el: '#app',
-    router,
-    store,
-    components: { App },
-    render: h => h(App),
-    template: '<App/>'
+init()
+  .then(() => {
+    new Vue({
+      el: '#app',
+      router,
+      store,
+      components: {
+        App
+      },
+      render: h => h(App),
+      template: '<App/>'
+    })
   })
-})

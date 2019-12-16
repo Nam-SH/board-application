@@ -38,6 +38,7 @@ export default {
     commit(SET_ACCESS_TOKEN, token)
     return api.get('/users/me')
       .then(res => {
+        // api 통신 이후 commit이 실행되게끔 해서 비동기식으로 인한 문제 방지
         commit(SET_MY_INFO, res.data)
       })
   },
