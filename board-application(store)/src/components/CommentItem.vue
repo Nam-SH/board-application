@@ -2,12 +2,12 @@
   <div class="comment-item">
     <strong>{{ comment.user.name }}</strong><span>{{ comment.createdAt }}</span>
     <div v-if="isEditing">
-      <textarea v-model="editMessage" rows="3"></textarea>
+      <textarea v-model="editMessage" rows="3" ref="contents"></textarea>
       <button @click="onEdit">수정완료</button>
     </div>
     <p v-else>{{ comment.contents }}</p>
     <ul v-if="isMyComment">
-      <li> <button type="button" @click="toggleEditMode">{{ editButtonText }}</button> </li>
+      <li> <button type="button" @click="toggleEditMode" @blur="handleBlur">{{ editButtonText }}</button> </li>
       <li> <button type="button" @click="onDelete">삭제</button> </li>
     </ul>
   </div>
@@ -52,10 +52,24 @@ export default {
   methods: {
     toggleEditMode () {
       this.isEditing = !this.isEditing
+      console.log('toggleEditMode', this.isEditing)
+      // this.$refs.contents.focus() 만 추가할 시,undefined 에러가 발생한다.
+      // 따라서 nextTick 함수를 사용한다.
       if (this.isEditing) {
         this.editMessage = this.comment.contents
+        this.$nextTick(() => {
+          this.$refs.contents.focus()
+      })
+      }
+      else {
+        this.$refs.contents.blur()
       }
     },
+    handleBlur() {
+      console.log('handleBlur', this.isEditing)
+      // this.isEditing = !this.isEditing
+    }
+    ,
     onEdit() {
       if (this.isValidComment) {
         // console.log('길이 통과~')
@@ -69,7 +83,6 @@ export default {
     },
     onDelete () {
       const { id } = this.comment
-
       this.$emit('delete', id)
     }
   }
