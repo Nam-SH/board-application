@@ -41,6 +41,7 @@ export default {
   },
 
   [UPDATE_COMMENT] (state, payload) {
+    // console.log(payload)
     state.post.comments.push(payload)
   },
 
@@ -48,6 +49,7 @@ export default {
     const { id: commentId, contents, updatedAt } = payload
 
     const targetComment = state.post.comments.find(comment => comment.id === commentId)
+    // console.log('targetComment', targetComment)
     targetComment.contents = contents
     targetComment.updatedAt = updatedAt
   },

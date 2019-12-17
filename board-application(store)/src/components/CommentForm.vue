@@ -15,7 +15,7 @@
     },
     methods: {
       onCommentSubmit () {
-        console.log('onSubmit', this.comment)
+        // console.log('onSubmit', this.comment)
         const { comment } = this
         this.$emit('submit', comment)
         this.comment = ''
@@ -23,7 +23,3 @@
     }
   }
 </script>
-
-<stylescoped>
-
-</style>

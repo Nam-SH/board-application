@@ -67,9 +67,8 @@ export default {
   deleteComment ({ commit, state }, { commentId }) {
     const postId = state.post.id
     return api.delete(`/posts/${postId}/comments/${commentId}`)
-            .then(res => {
+            .then(() => {
               commit(DELETE_COMMENT, commentId)
             })
   }
-
 }

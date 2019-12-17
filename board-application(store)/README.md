@@ -2286,7 +2286,7 @@ import api from '@/api'
 </script>
 ```
 
-- 댓글의 수정과 삭제 버튼이 작성한 작성자만이 보이게끔 설정한다.
+- 댓글의 수정과 삭제 버튼이 작성한 작성자만이 보이게 설정한다.
 
 ```vue
 // src/components/CommentItem.vue
@@ -2336,27 +2336,546 @@ export default {
 
 ```
 
+```vue
+// src/components/CommentForm.vue
+
+<template>
+  <div class="comment-form">
+    <textarea v-model="comment" rows="5" placeholder="댓글을 입력해주세요"></textarea>
+      
+    <!-- 버튼을 클릭 시 onCommentSubmit 함수가 실행됨 -->
+    <button type="button" @click="onCommentSubmit">등록</button>
+  </div>
+</template>
+
+<script>
+  export default {
+    name: 'CommentForm',
+    data () {
+      return {
+        comment: ''
+      }
+    },
+    methods: {
+      // 1. '생성' 버튼 클릭 시 실행될 함수를 작성한다.
+      onCommentSubmit () {
+        // console.log('onSubmit', this.comment)
+        const { comment } = this
+        
+        // 2. 입력된 데이터를 submit 함수를 호출하고, 인자를 넘긴다.
+        this.$emit('submit', comment)
+        // 3. 작성 완료 후, 입력된 데이터를 초기한다.
+        this.comment = ''
+      }
+    }
+  }
+</script>
 ```
 
+```vue
+// src/pages/PostViewPage.vue
+
+<template>
+  <div class="post-view-page">
+    <post-view v-if="post" :post="post" />
+    <p v-else>게시글 불러오는 중...</p>
+    <router-link :to="{ name: 'PostEditPage', params: { postId } }">수정!</router-link>
+    <button>삭제!</button>
+    <router-link :to="{ name: 'PostListPage' }">목록!</router-link>
+    <comment-list v-if="post" :comments="post.comments" />
+      
+    <!-- 2. submit의 이벤트 리스너를 추가한다. -->
+    <comment-form @submit="onCommentSubmit" />
+  </div>
+</template>
+
+<script>
+  import CommentForm from '@/components/CommentForm'
+  ...,
+
+  export default {
+    name: 'PostViewPage',
+    components: {
+      ...,
+      CommentForm
+    },
+    ...,
+    methods: {
+      ...,
+      // 1. submit 이벤트 핸들러로 등록시켜줄 onCommentSubmit 함수를 추가한다.
+      onCommentSubmit (comment) {
+        // console.log(comment)
+        if (!this.isAuthorized) {
+          alert('로그인이 필요합니다.')
+          this.$router.push({ name: 'Signin' })
+        } else {
+          this.createComment(comment)
+            .then(() => {
+              alert('댓글이 성공적으로 작성되었습니다.')
+            })
+            .catch(err => {
+              alert(err.response.data.msg)
+            })
+        }
+      }
+    },
+    ...
+  }
+</script>
+```
+
+- 댓글 이벤트 생성 후, API통신을 통해 댓글 데이터를 생성한 후 Vuex 상태의 데이터를 갱신시켜야 한다.
+
+```js
+// src/store/mutations-types.js
+
+...,
+export const UPDATE_COMMENT = 'UPDATE_COMMENT'
+```
+
+```js
+// src/store/mutations.js
+
+export default {
+  ...,
+  [UPDATE_COMMENT] (state, payload) {
+    state.post.comments.push(payload)
+  },
+}
+```
+
+```js
+// src/store/actions.js
+
+export default {
+  ...,
+  createComment ({ commit, state }, comment) {
+      
+    // 현재 포스팅의 ID를 상태에 접근해서 가져온다.
+    const postId = state.post.id
+    return api.post(`posts/${postId}/comments`, { contents: comment })
+      .then(res => {
+        commit(UPDATE_COMMENT, res.data)
+      })
+  }
+}
+```
+
+```vue
+// src/pages/PostViewPage.vue
+
+<template>
+  <div class="post-view-page">
+    <post-view v-if="post" :post="post" />
+    <p v-else>게시글 불러오는 중...</p>
+    <router-link :to="{ name: 'PostEditPage', params: { postId } }">수정!</router-link>
+    <button>삭제!</button>
+    <router-link :to="{ name: 'PostListPage' }">목록!</router-link>
+    <comment-list v-if="post" :comments="post.comments" />
+    <comment-form @submit="onCommentSubmit" />
+  </div>
+</template>
+
+<script>
+  import { mapActions, mapState, mapGetters } from 'vuex'
+  ...,
+
+  export default {
+    name: 'PostViewPage',
+    computed: {
+      ...mapState(['post', 'me']),
+        
+      // 1. 액션 함수를 호출하기 전에 사용자 인증 여부 검증 단계를 거쳐야 한다.
+      // 2. mapGetters 헬퍼 함수를 통해 isAuthorized 게터 함수를 컴포넌트에 매핑한다.
+      ...mapGetters(['isAuthorized'])
+    },
+    methods: {
+      ...mapActions([ 'fetchPost', 'createComment' ]),
+        
+      onCommentSubmit (comment) {
+        // console.log(comment)
+        if (!this.isAuthorized) {
+          alert('로그인이 필요합니다.')
+          this.$router.push({ name: 'Signin' })
+        } else {
+          // 3. 사용자 인증여부가 통과되면 createComment 액션을 통해 API 서버를 호출한다.
+          this.createComment(comment)
+            .then(() => {
+              alert('댓글이 성공적으로 작성되었습니다.')
+            })
+            .catch(err => {
+              alert(err.response.data.msg)
+            })
+        }
+      }
+    },
+    ...
+  }
+</script>
 ```
 
 
 
 ### 11.3 댓글 수정 기능 추가
 
+```vue
+
+
+<template>
+  <div class="comment-item">
+    <strong>{{ comment.user.name }}</strong><span>{{ comment.createdAt }}</span>
+      
+    <!-- 6. isEditing값이 참일 경우 댓글을 수정할 수 있는 textarea태그와 수정 완료 버튼을 작성한다. -->
+    <div v-if="isEditing">
+      <textarea v-model="editMessage" rows="3"></textarea>
+      <!-- 12. 작성한 onEdit 함수를 버튼의 클릭 이벤트에 추가한다. -->
+      <button @click="onEdit">수정완료</button>
+    </div>
+    <!-- 7. 기존 댓글을 보여주는 DOM은 isEditing 값이 거짓일 경우에만 노출한다. -->
+    <p v-else>{{ comment.contents }}</p>
+    <ul v-if="isMyComment">
+      <!-- 5. 수정 버튼의 이벤트 리스너로 toggleEditMode 메소드를 연결한다. -->
+      <!-- 9. 선언한 editButtonText을 수정 버튼에 할당 해 준다. -->
+      <li> <button type="button" @click="toggleEditMode">{{ editButtonText }}</button> </li>
+      <li> <button type="button">삭제</button> </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import { mapState, mapGetters } from 'vuex'
+
+export default {
+  name: 'CommentItem',
+  ...,
+  computed: {
+    ...,
+    // 8. isEditing참일 경우 수정취소버튼이, 거짓일 경우에는 수정버튼이 나오게 한다
+    editButtonText () {
+      return this.isEditing ? '수정 취소':'수정'
+    },
+    // 10. 수정한 댓글의 길이가 1자 이상 255 이하인 경우에만 참을 반환한다.
+    isValidComment () {
+      return 0 < this.editMessage.length < 256
+    }
+  },
+  data () {
+    return {
+      // 1. 수정모드와 읽기모드를 구분할 수 있도록 isEditing 변수를 추가한다.
+      isEditing: false,
+      // 2. 댓글 수정 폼과 연동될 반응형 문자열 변수를 선언한다.
+      editMessage: ''
+    }
+  },
+  methods: {
+    // 3. toggleEditMode 메소드가 실행될 때마다 isEditing 변수가 반전된다.
+    toggleEditMode () {
+      this.isEditing = !this.isEditing
+      if (this.isEditing) {
+        // 4. 수정모드가 활성화되면 댓글의 내용을 수정할 메시지에 바인딩해준다.
+        this.editMessage = this.comment.contents
+      }
+    },
+    onEdit() {
+      // 11. 댓글이 유효성 검증을 통과하 상태면 CommentList의 edit 이벤트를 실행시킨다.
+      if (this.isValidComment) {
+        this.isEditing = false
+        const { id } = this.comment
+        this.$emit('edit', { id, comment: this.editMessage })
+      }
+      else {
+        alert('댓글을 1글자 이상 255자 이하여야 한다.')
+      }
+    }
+  }
+}
+</script>
+```
+
+```vue
+
+
+<template>
+  <ul class="comments">
+    <li v-if="comments.length <= 0">댓글이 없습니다.</li>
+    <li v-for="comment in comments" :key="comment.id"> 
+      <!-- CommentItem 컴포넌트의 edit 이벤트 핸들러로 onEdit 메소드를 등록한다.  -->
+      <comment-item :comment="comment" @edit="onEdit"/>
+    </li>
+  </ul>
+</template>
+
+<script>
+  import CommentItem from "@/components/CommentItem"
+
+  export default {
+    name: 'CommentList',
+    ...,
+    methods: {
+      onEdit(payload) {
+        const { id, comment } = payload
+      }
+    }
+  }
+</script>
+```
+
+- 현재 조작하려는 댓글의 상태는 스토어에 저장되어 있다. 
+- 따라서 이 댓글 상태를 수정하기 위해서는 스토어의 액션과 변이를 사용해야 한다.
+
+```js
+// src/store/mutations-types.js
+
+...,
+export const EDIT_COMMENT = 'EDIT_COMMENT'
+```
+
+```js
+// src/store/mutations.js
+
+export default {
+
+  [EDIT_COMMENT] (state, payload) {
+    const { id: commentId, contents, updatedAt } = payload
+    
+    // Array 자료형의 find 메소드를 사용하여 주입받은 아이디와 같은 아이디를 가진 댓글 객체를 찾는다.
+    // 따라서 EDIT_COMMENT 변이를통해 스토어의 댓글 상태를 갱신할 수 있게 된다.
+    const targetComment = state.post.comments.find(comment => comment.id === commentId)
+    targetComment.contents = contents
+    targetComment.updatedAt = updatedAt
+  }
+}
+```
+
+```js
+// src/store/actions.js
+
+export default {
+  // ...,
+    
+  // 스토어의 댓글 상태만 갱신한다고 해서 서버에 저장된 댓글 상태까지 갱신되는 것이 아니기 때문에, 
+  // 액션을 사용하여 API를 통한 댓글 갱신 요청을 작성한다.
+  editComment ({ commit, state }, { commentId, comment }) {
+    const postId = state.post.id
+    return api.put(`/posts/${postId}/comments/${commentId}`, { contents: comment })
+            .then(res => {
+              commit(EDIT_COMMENT, res.data)
+            })
+  },
+}
+```
+
+```vue
+// src/components/CommentList.vue
+
+<template>
+  <ul class="comments">
+    <li v-if="comments.length <= 0">댓글이 없습니다.</li>
+    <li v-for="comment in comments" :key="comment.id"> 
+      <comment-item :comment="comment" @edit="onEdit" />
+    </li>
+  </ul>
+</template>
+
+<script>
+  import CommentItem from "@/components/CommentItem"
+  import { mapActions } from 'vuex'
+
+  export default {
+    name: 'CommentList',
+    ...
+    methods: {
+      onEdit(payload) {
+        const { id, comment } = payload
+        // 1. editComment 액션함수를 사용하여 API 서버에 댓글 수정 요청을 한다.
+        this.editComment({ commentId: id, comment })
+          .then(res => {
+            alert('댓글이 수정되었습니다.')
+          })
+          .catch(err => {
+            if (err.response.status === 401) {
+              alert('로그인이 필요합니다.')
+              this.$router.push({ name: 'Signin' })
+            }
+            else {
+              alert(err.response.data.msg)
+            }
+          })
+      },
+      ...mapActions([ 'editComment', 'deleteComment' ])
+    }
+  }
+</script>
+```
+
 ### 11.4 댓글 삭제기능 추가
 
+```vue
+
+
+<template>
+  <div class="comment-item">
+    <strong>{{ comment.user.name }}</strong><span>{{ comment.createdAt }}</span>
+    <div v-if="isEditing">
+      <textarea v-model="editMessage" rows="3"></textarea>
+      <button @click="onEdit">수정완료</button>
+    </div>
+    <p v-else>{{ comment.contents }}</p>
+    <ul v-if="isMyComment">
+      <li> <button type="button" @click="toggleEditMode">{{ editButtonText }}</button> </li>
+        
+      <!-- 3. onDelete 함수를 클릭 이벤트에 등록한다. -->
+      <li> <button type="button" @click="onDelete">삭제</button> </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import { mapState, mapGetters } from 'vuex'
+
+export default {
+  name: 'CommentItem',
+  ...,
+  methods: {
+    ...,
+    // 1. onDelete 함수를 생성한다.
+    onDelete () {
+      const { id } = this.comment
+      
+      // 2. 삭제 버튼 클릭 시, comment의 id 값을 넘긴다.
+      this.$emit('delete', id)
+    }
+  }
+}
+</script>
+```
+
+```js
+// src/store/mutations-types.js
+
+...
+export const DELETE_COMMENT = 'DELETE_COMMENT'
+```
+
+```js
+// src/store/mutations.js
+
+export default {
+  // ...,
+  [DELETE_COMMENT] (state, commentId) {
+    const targetIndex = state.post.comments.findIndex(comment => comment.id === commentId)
+    state.post.comments.splice(targetIndex, 1)
+  }
+}
+```
+
+```js
+// src/store/actions.js
+
+export default {
+  // ...,
+  deleteComment ({ commit, state }, { commentId }) {
+    const postId = state.post.id
+    return api.delete(`/posts/${postId}/comments/${commentId}`)
+            .then(res => {
+              commit(DELETE_COMMENT, commentId)
+            })
+  }
+}
+```
+
+```vue
+
+
+<template>
+  <ul class="comments">
+    <li v-if="comments.length <= 0">댓글이 없습니다.</li>
+    <li v-for="comment in comments" :key="comment.id"> 
+      <comment-item :comment="comment" @edit="onEdit" @delete="onDelete" />
+    </li>
+  </ul>
+</template>
+
+<script>
+  import CommentItem from "@/components/CommentItem"
+  import { mapActions } from 'vuex'
+
+  export default {
+    name: 'CommentList',
+    ...,
+    methods: {
+      ...,
+      // 1. onDelete 함수를 생성한다.
+      onDelete(commentId) {
+        // 2. deleteComment 액션함수를 실행시킨다. 
+        this.deleteComment({ commentId })
+          .then(res => {
+            alert('댓글이 삭제되었습니다.')
+          })
+          .catch(err => {
+            if (err.response.status === 401) {
+              alert('로그인이 필요합니다.')
+              this.$router.push({  name: 'Signin'})
+            }
+            else {
+              alert(err.response.data.msg)
+            }
+          })
+      },
+      ...mapActions([ 'editComment', 'deleteComment' ])
+    }
+  }
+</script>
+```
 
 
 
+## 12. 결과
 
+### 12.1 게시판 읽기
 
+![Screenshot 2019-12-17 at 11 17 53](https://user-images.githubusercontent.com/50367487/70959484-ce49b200-20bf-11ea-94ee-76324e24501b.jpg)
 
+### 12.2 게시판 상세정보 출력화면
 
+![Screenshot 2019-12-17 at 11 18 09](https://user-images.githubusercontent.com/50367487/70959497-d3a6fc80-20bf-11ea-84ec-e4088fbc78cd.jpg)
 
+### 12.3 회원가입
 
+![Screenshot 2019-12-17 at 11 18 22](https://user-images.githubusercontent.com/50367487/70959499-d4d82980-20bf-11ea-9881-b1815f0df286.jpg)
 
+### 12.4 로그인
 
+![Screenshot 2019-12-17 at 11 18 28](https://user-images.githubusercontent.com/50367487/70959505-d570c000-20bf-11ea-948b-315b2fa279fb.jpg)
 
+### 12.5 게시물 생성 페이지
 
+![Screenshot 2019-12-17 at 11 18 43](https://user-images.githubusercontent.com/50367487/70959511-da357400-20bf-11ea-80bd-7ded01ed20df.jpg)
 
+### 12.6 게시물 수정 페이지
+
+![Screenshot 2019-12-17 at 11 19 03](https://user-images.githubusercontent.com/50367487/70959512-db66a100-20bf-11ea-9a93-92abf0f83f6a.jpg)
+
+![Screenshot 2019-12-17 at 11 19 23](https://user-images.githubusercontent.com/50367487/70959515-dbff3780-20bf-11ea-89b6-44b55e3b9c55.jpg)
+
+### 12.7 게시물 삭제 페이지
+
+![캡처](https://user-images.githubusercontent.com/50367487/70959607-136de400-20c0-11ea-95c4-0b7bd02ff5fb.PNG)
+
+### 12.8 댓글 생성
+
+![캡처2](https://user-images.githubusercontent.com/50367487/70959609-14067a80-20c0-11ea-8a06-cd1aec5296c5.PNG)
+
+![캡처3](https://user-images.githubusercontent.com/50367487/70959610-149f1100-20c0-11ea-9531-a9305327e658.PNG)
+
+### 12.9 댓글 수정
+
+![캡처4](https://user-images.githubusercontent.com/50367487/70959614-1537a780-20c0-11ea-858b-a4dbdb70f4f7.PNG)
+
+![캡처5](https://user-images.githubusercontent.com/50367487/70959615-15d03e00-20c0-11ea-90d2-4724d2f51fc5.PNG)
+
+### 12.10 댓글 삭제
+
+![캡처6](https://user-images.githubusercontent.com/50367487/70959618-17016b00-20c0-11ea-9885-19f4a0808a35.PNG)
+
+![Screenshot 2019-12-17 at 11 23 00](https://user-images.githubusercontent.com/50367487/70959619-18329800-20c0-11ea-97c7-3c5de29e9ff6.jpg)

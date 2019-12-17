@@ -1,18 +1,15 @@
 <template>
   <div class="comment-item">
     <strong>{{ comment.user.name }}</strong><span>{{ comment.createdAt }}</span>
-
     <div v-if="isEditing">
       <textarea v-model="editMessage" rows="3"></textarea>
       <button @click="onEdit">수정완료</button>
     </div>
     <p v-else>{{ comment.contents }}</p>
-
     <ul v-if="isMyComment">
       <li> <button type="button" @click="toggleEditMode">{{ editButtonText }}</button> </li>
       <li> <button type="button" @click="onDelete">삭제</button> </li>
     </ul>
-
   </div>
 </template>
 
