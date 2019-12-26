@@ -70,7 +70,7 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true,
   });
   User.associate = function (models) {
-    // associations can be defined here
+    // 하나의 User는 많은 Post를 가질수 있다.
     User.hasMany(models.Post);
   };
   User.prototype.toJSON = function () {
