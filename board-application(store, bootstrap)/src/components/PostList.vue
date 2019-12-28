@@ -1,17 +1,12 @@
 <template>
-  <div>
-    <table>
-      <tbody>
-        <tr v-for="post in posts" :key="post.id">
-          <td scope="col">
+    <b-list-group>
+      <p v-for="post in posts" :key="post.id">
+        <b-list-group-item scope="col">
           <router-link :to="{ name: 'PostViewPage', params: { postId: post.id.toString() } }">{{ post.title }}</router-link> [{{ post.comments.length }}]
-          </td>
-        </tr>
-      </tbody>
+        </b-list-group-item>
+      </p>
+    </b-list-group>
 
-    </table>
-
-  </div>
 </template>
 
 <script>
@@ -25,7 +20,3 @@
     }
   }
 </script>
-
-<style scoped>
-
-</style>

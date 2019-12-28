@@ -1,8 +1,8 @@
 <template>
-  <div class="post-create-page">
-    <h3>게시물 작성하기</h3>
+  <b-container class="post-create-page">
+    <h3><strong> 게시물 작성하기 </strong></h3>
     <post-create-form @submit="onSubmit" />
-  </div>
+  </b-container>
 </template>
 
 
