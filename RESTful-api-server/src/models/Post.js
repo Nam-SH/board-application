@@ -52,9 +52,11 @@ module.exports = (sequelize, DataTypes) => {
     const value = Object.assign({}, this.get());
     value.user = value.User;
     value.comments = value.Comments;
+
     delete value.User;
     delete value.Comments;
     delete value.UserId;
+
     return value;
   };
   Post.prototype.isMyPost = function (user) {
