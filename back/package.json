@@ -1,7 +1,7 @@
 {
   "name": "hot-place-share-api",
   "version": "0.0.1",
-  "description": "CanDoVueJS의 맛집 공유 샘플서비스 Restful API",
+  "description": "back",
   "main": "dist",
   "scripts": {
     "dev": "nodemon -w src --exec \"babel-node src --presets es2015,stage-0\"",
@@ -19,8 +19,8 @@
     "db:migrate:seed": "npm run db:migrate && npm run db:seed",
     "makemigration": "npx makemigration"
   },
-  "repository": "CanDoVueJS/hot-place-share-api",
-  "author": "Evan Moon <bboydart91@gmail.com>",
+  "repository": "",
+  "author": "",
   "license": "MIT",
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
